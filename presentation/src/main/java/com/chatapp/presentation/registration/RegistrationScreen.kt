@@ -1,5 +1,6 @@
 package com.chatapp.presentation.registration
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -23,11 +24,13 @@ import androidx.navigation.NavController
 import com.chatapp.presentation.components.CommonButton
 import com.chatapp.presentation.components.CommonLoadingView
 import com.chatapp.presentation.components.CommonOutlinedTextField
+import com.chatapp.presentation.navigation.RegistrationScreen
 import com.chatapp.ui.theme.LightNavy
 import com.chatapp.ui.theme.LightYellow
 import com.chatapp.ui.theme.Navy
 import com.chatapp.ui.theme.Typography
 
+@SuppressLint("RestrictedApi")
 @Composable
 fun RegistrationScreen(
     navController: NavController,
@@ -38,7 +41,7 @@ fun RegistrationScreen(
 
     LaunchedEffect(uiState.navigation) {
         uiState.navigation?.let {
-            navController.navigate(it)
+            navController.navigate(it) { popUpTo(RegistrationScreen::class) { inclusive = true } }
             viewModel.sendUIEvent(RegistrationUIEvent.OnNavigate)
         }
     }

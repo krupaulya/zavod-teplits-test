@@ -1,6 +1,5 @@
 package com.chatapp.presentation.navigation
 
-import com.chatapp.presentation.model.ChatsDataUIModel
 import kotlinx.serialization.Serializable
 
 
