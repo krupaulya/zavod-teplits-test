@@ -1,5 +1,8 @@
 package com.chatapp.domain
 
+import android.content.ContentResolver
+import android.graphics.Bitmap
+import android.net.Uri
 import com.chatapp.core.ApiResult
 import com.chatapp.domain.model.ChatsModel
 import com.chatapp.domain.model.noauth.PhoneNumberModel
@@ -50,4 +53,8 @@ interface Repository {
         avatar: String?,
         aboutMe: String?
     )
+
+    fun getBase64FromUri(contentResolver: ContentResolver, uri: Uri): String?
+
+    fun base64ToBitmap(base64String: String?): Bitmap?
 }

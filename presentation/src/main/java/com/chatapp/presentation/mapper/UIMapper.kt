@@ -53,10 +53,10 @@ fun UserDataUIModel.toUpdateUserModel(): UpdateUserModel {
         vk = this.vk,
         instagram = this.instagram,
         status = this.status,
-        avatar = this.avatar?.let { avatarUrl ->
+        avatar = this.avatar?.let {
             UpdateUserModel.Avatar(
-                filename = "avatarUrl",
-                base64 = avatarUrl
+                filename = it.filename,
+                base64 = it.base64String
             )
         }
     )

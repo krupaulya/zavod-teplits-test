@@ -1,5 +1,10 @@
 package com.chatapp.presentation.profile
 
+import android.net.Uri
+import android.util.Log
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,16 +41,20 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        Log.d("uri", uri.toString())
+        uri?.let { viewModel.sendUIEvent(ProfileUIEvent.OnSuccessImageUpload(contentResolver = context.contentResolver, imageUri = it)) }
+    }
     ProfileScreenContent(
         uiState = uiState,
         onCityChange = { viewModel.sendUIEvent(ProfileUIEvent.OnCityChange(it)) },
         onBirthDateChange = { viewModel.sendUIEvent(ProfileUIEvent.OnBirthDateChange(it)) },
-        onZodiacSignChange = { viewModel.sendUIEvent(ProfileUIEvent.OnZodiacSignChange(it)) },
         onAboutMeChange = { viewModel.sendUIEvent(ProfileUIEvent.OnAboutMeChange(it)) },
         onEditProfileClick = { viewModel.sendUIEvent(ProfileUIEvent.OnEditClick) },
         onSaveChanges = { viewModel.sendUIEvent(ProfileUIEvent.OnSaveChanges) },
-        onBackClick = { navController.navigateUp() }
+        onBackClick = { navController.navigateUp() },
+        launcher = launcher
     )
 }
 
@@ -53,11 +63,11 @@ private fun ProfileScreenContent(
     uiState: ProfileUIState,
     onCityChange: (String) -> Unit,
     onBirthDateChange: (String) -> Unit,
-    onZodiacSignChange: (String) -> Unit,
     onAboutMeChange: (String) -> Unit,
     onEditProfileClick: () -> Unit,
     onSaveChanges: () -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    launcher: ManagedActivityResultLauncher<String, Uri?>
 ) {
     Scaffold(
         topBar = {
@@ -75,9 +85,9 @@ private fun ProfileScreenContent(
             uiState = uiState,
             onCityChange = onCityChange,
             onBirthDateChange = onBirthDateChange,
-            onZodiacSignChange = onZodiacSignChange,
             onAboutMeChange = onAboutMeChange,
             onSaveChanges = onSaveChanges,
+            launcher = launcher,
             modifier = Modifier.padding(paddingValues)
         )
     }
@@ -88,9 +98,9 @@ fun ProfileContent(
     uiState: ProfileUIState,
     onCityChange: (String) -> Unit,
     onBirthDateChange: (String) -> Unit,
-    onZodiacSignChange: (String) -> Unit,
     onAboutMeChange: (String) -> Unit,
     onSaveChanges: () -> Unit,
+    launcher: ManagedActivityResultLauncher<String, Uri?>,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -105,11 +115,12 @@ fun ProfileContent(
         ) {
             UserImage(
                 modifier = Modifier
-                    .size(100.dp)
+                    .size(120.dp)
                     .align(CenterHorizontally),
-                avatar = "",
-                placeholder = R.drawable.empty_avatar
-            )
+                avatar = uiState.imageBitmap,
+                placeholder = R.drawable.empty_avatar,
+                clickable = uiState.editEnabled
+            ) { launcher.launch("image/*") }
             Spacer(modifier = Modifier.height(16.dp))
 
             CommonTextField(label = "Никнейм", value = uiState.userData.nickname) {}
@@ -128,10 +139,8 @@ fun ProfileContent(
             )
             CommonTextField(
                 label = "Знак зодиака",
-                value = uiState.userData.zodiacSign,
-                enabled = uiState.editEnabled,
-                onValueChanged = onZodiacSignChange
-            )
+                value = uiState.userData.zodiacSign
+            ) {}
             CommonTextField(
                 label = "О себе",
                 value = uiState.userData.aboutMe,

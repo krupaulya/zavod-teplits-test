@@ -26,8 +26,55 @@ class ChatsViewModel @Inject constructor(
     }
 
     override val initialState: ChatsUIState
-        get() = ChatsUIState(chats = emptyList(), isLoading = true)
+        get() = ChatsUIState(chats = emptyList(), nickname = "", avatar = null, isLoading = true)
 
     override fun handleUserIntent(intent: ChatsUIEvent) {
+        when (intent) {
+            ChatsUIEvent.GetCurrentUser -> getCurrentUser()
+        }
+    }
+
+    private fun getCurrentUser() {
+        viewModelScope.launch {
+            val localUser = repository.getUser()
+            if (localUser != null) {
+                updateLoadingState(false)
+                updateState { oldState ->
+                    oldState.copy(
+                        nickname = localUser.username,
+                        avatar = localUser.avatar,
+                        imageBitmap = repository.base64ToBitmap(base64String = localUser.avatar)
+                    )
+                }
+            } else {
+                repository.getCurrentUser()
+                    .handleApiResultFlow(
+                        scope = viewModelScope,
+                        onSuccess = { success ->
+                            updateLoadingState(false)
+                            viewModelScope.launch { repository.insertUser(success) }
+                            updateState { oldState ->
+                                oldState.copy(
+                                    nickname = success.username,
+                                    avatar = success.avatar,
+                                    imageBitmap = repository.base64ToBitmap(base64String = success.avatar)
+                                )
+                            }
+                        },
+                        onError = {
+                            updateLoadingState(false)
+                        },
+                        onLoading = {
+                            updateLoadingState(true)
+                        }
+                    )
+            }
+        }
+    }
+
+    private fun updateLoadingState(isLoading: Boolean) {
+        updateState { oldState ->
+            oldState.copy(isLoading = isLoading)
+        }
     }
 }

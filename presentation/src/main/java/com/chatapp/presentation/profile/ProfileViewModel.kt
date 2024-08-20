@@ -31,7 +31,7 @@ class ProfileViewModel @Inject constructor(
                 instagram = "",
                 vk = "",
                 status = "",
-                avatar = ""
+                avatar = null
             ),
             isLoading = true,
             editEnabled = false
@@ -42,9 +42,26 @@ class ProfileViewModel @Inject constructor(
             is ProfileUIEvent.OnAboutMeChange -> changeAboutMe(intent.aboutMe)
             is ProfileUIEvent.OnBirthDateChange -> changeBirthDate(intent.birthDate)
             is ProfileUIEvent.OnCityChange -> changeCity(intent.city)
-            is ProfileUIEvent.OnZodiacSignChange -> changeZodiac(intent.zodiac)
             ProfileUIEvent.OnEditClick -> updateEditingState(true)
             ProfileUIEvent.OnSaveChanges -> saveChanges()
+            is ProfileUIEvent.OnSuccessImageUpload -> {
+                val base64String = repository.getBase64FromUri(
+                    contentResolver = intent.contentResolver, uri = intent.imageUri
+                )
+                val imageBitmap = repository.base64ToBitmap(base64String = base64String)
+                updateState { oldState ->
+                    val userData = uiState.value.userData.copy(
+                        avatar = UserDataUIModel.Avatar(
+                            filename = intent.imageUri.toString(),
+                            base64String = base64String,
+                        )
+                    )
+                    oldState.copy(
+                        userData = userData,
+                        imageBitmap = imageBitmap
+                    )
+                }
+            }
         }
     }
 
@@ -58,44 +75,17 @@ class ProfileViewModel @Inject constructor(
                     phoneNumber = localUser.phone,
                     city = localUser.city,
                     birthDate = localUser.birthday,
-                    avatar = localUser.avatar
+                    avatar = UserDataUIModel.Avatar(
+                        filename = "",
+                        base64String = localUser.avatar
+                    )
                 )
                 updateState { oldState ->
                     oldState.copy(
-                        userData = user
+                        userData = user,
+                        imageBitmap = repository.base64ToBitmap(localUser.avatar)
                     )
                 }
-            } else {
-                repository.getCurrentUser()
-                    .handleApiResultFlow(
-                        scope = viewModelScope,
-                        onSuccess = { success ->
-                            updateLoadingState(false)
-                            val user = uiState.value.userData.copy(
-                                name = success.name.orEmpty(),
-                                nickname = success.username,
-                                phoneNumber = success.phone,
-                                city = success.city,
-                                birthDate = success.birthday,
-                                avatar = success.avatar,
-                                vk = success.vk,
-                                instagram = success.instagram,
-                                status = success.status
-                            )
-                            viewModelScope.launch { repository.insertUser(success) }
-                            updateState { oldState ->
-                                oldState.copy(
-                                    userData = user
-                                )
-                            }
-                        },
-                        onError = {
-                            updateLoadingState(false)
-                        },
-                        onLoading = {
-                            updateLoadingState(true)
-                        }
-                    )
             }
         }
     }
@@ -108,16 +98,19 @@ class ProfileViewModel @Inject constructor(
                     scope = viewModelScope,
                     onSuccess = {
                         updateLoadingState(false)
-                        viewModelScope.launch { repository.localUpdateUser(
-                            birthday = newUser.birthDate,
-                            city = newUser.city,
-                            avatar = newUser.avatar,
-                            instagram = newUser.instagram,
-                            vk = newUser.vk,
-                            status = newUser.status,
-                            aboutMe = newUser.aboutMe
-                        ) }
+                        viewModelScope.launch {
+                            repository.localUpdateUser(
+                                birthday = newUser.birthDate,
+                                city = newUser.city,
+                                avatar = newUser.avatar?.base64String,
+                                instagram = newUser.instagram,
+                                vk = newUser.vk,
+                                status = newUser.status,
+                                aboutMe = newUser.aboutMe
+                            )
+                        }
                         updateEditingState(false)
+
                     },
                     onError = {
                         updateLoadingState(false)
@@ -153,11 +146,6 @@ class ProfileViewModel @Inject constructor(
 
     private fun changeCity(city: String) {
         val userData = uiState.value.userData.copy(city = city)
-        updateState { oldState -> oldState.copy(userData = userData) }
-    }
-
-    private fun changeZodiac(zodiacSign: String) {
-        val userData = uiState.value.userData.copy(zodiacSign = zodiacSign)
         updateState { oldState -> oldState.copy(userData = userData) }
     }
 }

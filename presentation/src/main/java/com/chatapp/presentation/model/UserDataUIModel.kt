@@ -11,5 +11,10 @@ data class UserDataUIModel(
     val vk: String?,
     val instagram: String?,
     val status: String?,
-    val avatar: String?
-)
+    val avatar: Avatar?
+) {
+    data class Avatar(
+        val filename: String,
+        val base64String: String?
+    )
+}

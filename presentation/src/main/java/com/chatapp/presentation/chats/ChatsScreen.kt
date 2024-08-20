@@ -1,5 +1,6 @@
 package com.chatapp.presentation.chats
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,15 +30,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -63,8 +63,12 @@ fun ChatsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(Unit) {
+        viewModel.sendUIEvent(ChatsUIEvent.GetCurrentUser)
+    }
+
     ChatsScreenContent(
-        chats = uiState.chats,
+        uiState = uiState,
         onChatItemClick = { data ->
             navController.navigate(ChatScreen(chatDataId = data))
         },
@@ -74,7 +78,7 @@ fun ChatsScreen(
 
 @Composable
 fun ChatsScreenContent(
-    chats: List<ChatsDataUIModel>,
+    uiState: ChatsUIState,
     onChatItemClick: (Int) -> Unit,
     navController: NavController
 ) {
@@ -84,7 +88,11 @@ fun ChatsScreenContent(
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            DrawerContent(navController = navController)
+            DrawerContent(
+                navController = navController,
+                nickname = uiState.nickname,
+                avatar = uiState.imageBitmap
+            )
         }
     ) {
         Scaffold(
@@ -95,7 +103,7 @@ fun ChatsScreenContent(
             contentColor = Color.White
         ) { paddingValues ->
             ChatList(
-                chats = chats,
+                chats = uiState.chats,
                 modifier = Modifier.padding(paddingValues),
                 onChatItemClick = onChatItemClick
             )
@@ -128,9 +136,8 @@ private fun ChatItem(chat: ChatsDataUIModel, onChatItemClick: (Int) -> Unit) {
     ) {
         UserImage(
             modifier = Modifier.size(48.dp),
-            avatar = "",
             placeholder = R.drawable.empty_avatar
-        )
+        ) {}
         Spacer(modifier = Modifier.width(12.dp))
         Column(
             modifier = Modifier
@@ -158,9 +165,13 @@ private fun ChatItem(chat: ChatsDataUIModel, onChatItemClick: (Int) -> Unit) {
 }
 
 @Composable
-fun DrawerContent(navController: NavController) {
+fun DrawerContent(
+    navController: NavController,
+    nickname: String,
+    avatar: Bitmap?
+) {
     ModalDrawerSheet(drawerContainerColor = Navy) {
-        DrawerHeader()
+        DrawerHeader(nickname = nickname, avatar = avatar)
         Spacer(modifier = Modifier.padding(6.dp))
         NavigationItem(icon = Icons.Default.Person, name = "Профиль") { navController.navigate(ProfileScreen) }
         Spacer(modifier = Modifier.padding(2.dp))
@@ -174,7 +185,11 @@ fun DrawerContent(navController: NavController) {
 }
 
 @Composable
-private fun DrawerHeader(modifier: Modifier = Modifier) {
+private fun DrawerHeader(
+    nickname: String,
+    avatar: Bitmap?,
+    modifier: Modifier = Modifier
+) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.Start,
@@ -184,12 +199,13 @@ private fun DrawerHeader(modifier: Modifier = Modifier) {
             .fillMaxWidth()
     ) {
         UserImage(
-            modifier = Modifier.size(70.dp), avatar = "",
+            modifier = Modifier.size(90.dp),
+            avatar = avatar,
             placeholder = R.drawable.empty_avatar
-        )
+        ) {}
         Spacer(modifier = Modifier.padding(6.dp))
         Text(
-            text = "Shpuliya",
+            text = nickname,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge,
             color = LightYellow
@@ -221,11 +237,3 @@ private fun NavigationItem(
         colors = colors
     )
 }
-
-@Preview(showBackground = true)
-@Composable
-fun ChatsScreenPreview() {
-    val context = LocalContext.current
-    ChatsScreenContent(chats = emptyList(), {}, navController = NavController(context))
-}
-
