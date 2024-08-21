@@ -4,15 +4,15 @@ import android.content.Context
 import android.telephony.TelephonyManager
 import androidx.lifecycle.viewModelScope
 import com.chatapp.core.BaseViewModel
-import com.chatapp.presentation.navigation.ChatsScreen
-import com.chatapp.presentation.navigation.Navigation
-import com.chatapp.presentation.navigation.RegistrationScreen
 import com.chatapp.domain.Repository
 import com.chatapp.presentation.mapper.toCountryUIModel
 import com.chatapp.presentation.mapper.toDomain
 import com.chatapp.presentation.model.CodeDataUIModel
 import com.chatapp.presentation.model.CountryDataUIModel
 import com.chatapp.presentation.model.PhoneNumberUIModel
+import com.chatapp.presentation.navigation.ChatsScreen
+import com.chatapp.presentation.navigation.Navigation
+import com.chatapp.presentation.navigation.RegistrationScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -106,11 +106,11 @@ class AuthorizationViewModel @Inject constructor(
                                     accessToken = success.accessToken.orEmpty()
                                 )
                                 repository.saveUserId(success.userId)
-                            }
-                            if (success.isUserExists) {
-                                updateNavigation(navigation = ChatsScreen)
-                            } else {
-                                updateNavigation(navigation = RegistrationScreen(phoneNumber = uiState.value.phoneNumber))
+                                if (success.isUserExists) {
+                                    updateNavigation(navigation = ChatsScreen)
+                                } else {
+                                    updateNavigation(navigation = RegistrationScreen(phoneNumber = uiState.value.phoneNumber))
+                                }
                             }
                             updateConfirmationState(false)
                             updateConfirmationCode(code = "")

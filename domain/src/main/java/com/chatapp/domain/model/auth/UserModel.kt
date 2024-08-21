@@ -15,6 +15,8 @@ data class UserModel(
     val created: String,
     val phone: String,
     val completedTask: Int,
+    val aboutMe: String? = null,
+    val zodiacSign: String? = null,
     val avatars: Avatars?,
 ) {
     data class Avatars(

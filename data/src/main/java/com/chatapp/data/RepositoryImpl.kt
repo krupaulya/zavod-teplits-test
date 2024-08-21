@@ -139,11 +139,12 @@ class RepositoryImpl @Inject constructor(
         instagram: String?,
         status: String?,
         avatar: String?,
-        aboutMe: String?
+        aboutMe: String?,
+        zodiacSign: String?
     ) {
         chatsDao.updateUser(
             id = userManager.getUserId() ?: 0,
-            birthday, city, vk, instagram, status, avatar, aboutMe
+            birthday, city, vk, instagram, status, avatar, aboutMe, zodiacSign
         )
     }
 

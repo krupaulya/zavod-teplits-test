@@ -52,6 +52,8 @@ fun mapToUserData(userModel: UserModel): UserData {
         created = userModel.created,
         phone = userModel.phone,
         completedTask = userModel.completedTask,
+        zodiacSign = userModel.zodiacSign,
+        aboutMe = userModel.aboutMe,
         avatars = userModel.avatars?.let {
             UserData.AvatarsEntity(
                 mediumAvatar = it.avatar,
@@ -84,6 +86,8 @@ fun mapToUserModel(userData: UserData?): UserModel? {
                 bigAvatar = it.bigAvatar,
                 miniAvatar = it.miniAvatar
             )
-        }
+        },
+        zodiacSign = userData.zodiacSign,
+        aboutMe = userData.aboutMe
     ) else null
 }

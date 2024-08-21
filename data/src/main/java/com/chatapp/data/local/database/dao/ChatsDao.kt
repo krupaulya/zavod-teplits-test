@@ -19,10 +19,10 @@ interface ChatsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(user: UserData)
 
-    @Query("SELECT * FROM user WHERE id=:id")
+    @Query("SELECT * FROM user WHERE id = :id")
     suspend fun getUser(id: Int): UserData?
 
-    @Query("UPDATE user SET birthday = :birthday, city = :city, vk = :vk, instagram = :instagram, status = :status, avatar = :avatar, aboutMe = :aboutMe WHERE id = :id")
+    @Query("UPDATE user SET birthday = :birthday, city = :city, vk = :vk, instagram = :instagram, status = :status, avatar = :avatar, aboutMe = :aboutMe, zodiacSign = :zodiacSign WHERE id = :id")
     suspend fun updateUser(
         id: Int,
         birthday: String?,
@@ -31,6 +31,7 @@ interface ChatsDao {
         instagram: String?,
         status: String?,
         avatar: String?,
-        aboutMe: String?
+        aboutMe: String?,
+        zodiacSign: String?
     )
 }

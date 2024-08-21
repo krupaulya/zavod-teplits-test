@@ -8,5 +8,6 @@ data class ProfileUIState(
     val userData: UserDataUIModel,
     val imageBitmap: Bitmap? = null,
     val isLoading: Boolean,
+    val isDatePicker: Boolean = false,
     val editEnabled: Boolean
 ) : UIState
