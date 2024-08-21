@@ -8,7 +8,7 @@ import com.chatapp.data.local.database.entity.ChatsData
 import com.chatapp.data.local.database.entity.CountryData
 import com.chatapp.data.local.database.entity.UserData
 
-@Database(entities = [CountryData::class, ChatsData::class, UserData::class], version = 4, exportSchema = false)
+@Database(entities = [CountryData::class, ChatsData::class, UserData::class], version = 5, exportSchema = false)
 abstract class ChatsDatabase: RoomDatabase() {
 
     abstract fun countryDao(): CountryDao

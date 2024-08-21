@@ -14,7 +14,7 @@ data class UserDataUIModel(
     val avatar: Avatar?
 ) {
     data class Avatar(
-        val filename: String,
+        val filename: String?,
         val base64String: String?
     )
 }

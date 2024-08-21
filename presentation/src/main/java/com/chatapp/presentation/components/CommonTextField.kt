@@ -5,7 +5,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -21,8 +25,11 @@ import com.chatapp.ui.theme.Typography
 fun CommonTextField(
     value: String?,
     label: String,
+    readOnly: Boolean = false,
     enabled: Boolean = false,
-    onValueChanged: (String) -> Unit
+    trailingIcon: Boolean = false,
+    onValueChanged: (String) -> Unit,
+    onTrailingIconClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -35,6 +42,7 @@ fun CommonTextField(
             onValueChange = { newValue ->
                 onValueChanged(newValue)
             },
+            readOnly = readOnly,
             label = { Text(label, style = Typography.bodySmall, modifier = Modifier.padding(bottom = 4.dp)) },
             modifier = Modifier.fillMaxWidth(),
             textStyle = Typography.bodyLarge,
@@ -51,7 +59,17 @@ fun CommonTextField(
                 cursorColor = LightYellow,
                 disabledLabelColor = Color.LightGray,
             ),
-            enabled = enabled
+            enabled = enabled,
+            trailingIcon = {
+                if (enabled && trailingIcon) {
+                    IconButton(onClick = { onTrailingIconClick() }) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange, contentDescription = "Выбрать дату",
+                            tint = LightYellow
+                        )
+                    }
+                }
+            }
         )
         HorizontalDivider(
             modifier = Modifier

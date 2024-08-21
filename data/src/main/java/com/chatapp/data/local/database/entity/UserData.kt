@@ -21,7 +21,8 @@ data class UserData(
     val created: String,
     val phone: String,
     val completedTask: Int,
-    val aboutMe: String? = null,
+    val aboutMe: String?,
+    val zodiacSign: String?,
     @Embedded val avatars: AvatarsEntity?
 ) {
     @Entity

@@ -7,6 +7,10 @@ import com.chatapp.presentation.mapper.toUpdateUserModel
 import com.chatapp.presentation.model.UserDataUIModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -40,7 +44,6 @@ class ProfileViewModel @Inject constructor(
     override fun handleUserIntent(intent: ProfileUIEvent) {
         when (intent) {
             is ProfileUIEvent.OnAboutMeChange -> changeAboutMe(intent.aboutMe)
-            is ProfileUIEvent.OnBirthDateChange -> changeBirthDate(intent.birthDate)
             is ProfileUIEvent.OnCityChange -> changeCity(intent.city)
             ProfileUIEvent.OnEditClick -> updateEditingState(true)
             ProfileUIEvent.OnSaveChanges -> saveChanges()
@@ -62,6 +65,12 @@ class ProfileViewModel @Inject constructor(
                     )
                 }
             }
+
+            is ProfileUIEvent.OnDialogChange -> updateState { oldState ->
+                oldState.copy(isDatePicker = intent.isOpen)
+            }
+
+            is ProfileUIEvent.OnDateSelected -> changeBirthdate(intent.date)
         }
     }
 
@@ -71,14 +80,18 @@ class ProfileViewModel @Inject constructor(
             if (localUser != null) {
                 updateLoadingState(false)
                 val user = uiState.value.userData.copy(
+                    name = localUser.name.orEmpty(),
                     nickname = localUser.username,
                     phoneNumber = localUser.phone,
                     city = localUser.city,
                     birthDate = localUser.birthday,
-                    avatar = UserDataUIModel.Avatar(
-                        filename = "",
-                        base64String = localUser.avatar
-                    )
+                    avatar = if (localUser.avatar != null)
+                        UserDataUIModel.Avatar(
+                            filename = "",
+                            base64String = localUser.avatar
+                        ) else null,
+                    zodiacSign = localUser.zodiacSign,
+                    aboutMe = localUser.aboutMe
                 )
                 updateState { oldState ->
                     oldState.copy(
@@ -106,6 +119,7 @@ class ProfileViewModel @Inject constructor(
                                 instagram = newUser.instagram,
                                 vk = newUser.vk,
                                 status = newUser.status,
+                                zodiacSign = newUser.zodiacSign,
                                 aboutMe = newUser.aboutMe
                             )
                         }
@@ -134,11 +148,6 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    private fun changeBirthDate(birthDate: String) {
-        val userData = uiState.value.userData.copy(birthDate = birthDate)
-        updateState { oldState -> oldState.copy(userData = userData) }
-    }
-
     private fun changeAboutMe(text: String) {
         val userData = uiState.value.userData.copy(aboutMe = text)
         updateState { oldState -> oldState.copy(userData = userData) }
@@ -147,5 +156,55 @@ class ProfileViewModel @Inject constructor(
     private fun changeCity(city: String) {
         val userData = uiState.value.userData.copy(city = city)
         updateState { oldState -> oldState.copy(userData = userData) }
+    }
+
+    private fun changeBirthdate(date: Long?) {
+        val selectedDate = formatMillisToDate(date)
+        val zodiac = getZodiacSign(date)
+        val newUser = uiState.value.userData.copy(
+            birthDate = selectedDate,
+            zodiacSign = zodiac
+        )
+        updateState { oldState ->
+            oldState.copy(
+                userData = newUser
+            )
+        }
+    }
+
+    private fun formatMillisToDate(dateMillis: Long?): String {
+        if (dateMillis != null) {
+            val date = Date(dateMillis)
+            val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            return format.format(date)
+        }
+        return ""
+    }
+
+    private fun getZodiacSign(dateMillis: Long?): String {
+        if (dateMillis == null) return ""
+
+        val date = Date(dateMillis)
+        val calendar = Calendar.getInstance()
+        calendar.time = date
+
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+        val month = calendar.get(Calendar.MONTH) + 1 // Months are zero-based in Calendar
+
+        return when {
+            (day >= 21 && month == 3) || (day <= 19 && month == 4) -> "Овен"
+            (day >= 20 && month == 4) || (day <= 20 && month == 5) -> "Телец"
+            (day >= 21 && month == 5) || (day <= 20 && month == 6) -> "Близнецы"
+            (day >= 21 && month == 6) || (day <= 22 && month == 7) -> "Рак"
+            (day >= 23 && month == 7) || (day <= 22 && month == 8) -> "Лев"
+            (day >= 23 && month == 8) || (day <= 22 && month == 9) -> "Дева"
+            (day >= 23 && month == 9) || (day <= 22 && month == 10) -> "Весы"
+            (day >= 23 && month == 10) || (day <= 21 && month == 11) -> "Скорпион"
+            (day >= 22 && month == 11) || (day <= 21 && month == 12) -> "Стрелец"
+            (day >= 22 && month == 12) || (day <= 19 && month == 1) -> "Козерог"
+            (day >= 20 && month == 1) || (day <= 18 && month == 2) -> "Водолей"
+            (day >= 19 && month == 2) || (day <= 20 && month == 3) -> "Рыбы"
+            else -> ""
+        }
     }
 }

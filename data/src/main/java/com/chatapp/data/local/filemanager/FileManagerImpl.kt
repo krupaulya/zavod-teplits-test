@@ -41,8 +41,10 @@ class FileManagerImpl @Inject constructor() : FileManager {
 
     override fun base64ToBitmap(base64String: String?): Bitmap? {
         return try {
-            val byteArray = Base64.decode(base64String, Base64.DEFAULT)
-            BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+            base64String?.let {
+                val byteArray = Base64.decode(base64String, Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+            }
         } catch (e: IllegalArgumentException) {
             e.printStackTrace()
             null

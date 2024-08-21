@@ -51,7 +51,8 @@ interface Repository {
         instagram: String?,
         status: String?,
         avatar: String?,
-        aboutMe: String?
+        aboutMe: String?,
+        zodiacSign: String?
     )
 
     fun getBase64FromUri(contentResolver: ContentResolver, uri: Uri): String?
