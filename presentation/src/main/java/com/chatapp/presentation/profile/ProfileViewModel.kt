@@ -8,6 +8,8 @@ import com.chatapp.presentation.model.UserDataUIModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -79,6 +81,7 @@ class ProfileViewModel @Inject constructor(
             val localUser = repository.getUser()
             if (localUser != null) {
                 updateLoadingState(false)
+                val zodiacSign = if (localUser.zodiacSign.isNullOrEmpty()) localUser.birthday?.let { getZodiacSign(it) } else localUser.zodiacSign
                 val user = uiState.value.userData.copy(
                     name = localUser.name.orEmpty(),
                     nickname = localUser.username,
@@ -90,8 +93,8 @@ class ProfileViewModel @Inject constructor(
                             filename = "",
                             base64String = localUser.avatar
                         ) else null,
-                    zodiacSign = localUser.zodiacSign,
-                    aboutMe = localUser.aboutMe
+                    zodiacSign = zodiacSign,
+                    aboutMe = localUser.aboutMe,
                 )
                 updateState { oldState ->
                     oldState.copy(
@@ -183,14 +186,23 @@ class ProfileViewModel @Inject constructor(
 
     private fun getZodiacSign(dateMillis: Long?): String {
         if (dateMillis == null) return ""
-
         val date = Date(dateMillis)
         val calendar = Calendar.getInstance()
         calendar.time = date
-
         val day = calendar.get(Calendar.DAY_OF_MONTH)
         val month = calendar.get(Calendar.MONTH) + 1
+        return zodiacSign(day, month)
+    }
 
+    private fun getZodiacSign(dateString: String): String {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val date = LocalDate.parse(dateString, formatter)
+        val day = date.dayOfMonth
+        val month = date.monthValue
+        return zodiacSign(day, month)
+    }
+
+    private fun zodiacSign(day: Int, month: Int): String {
         return when {
             (day >= 21 && month == 3) || (day <= 19 && month == 4) -> "Овен"
             (day >= 20 && month == 4) || (day <= 20 && month == 5) -> "Телец"
